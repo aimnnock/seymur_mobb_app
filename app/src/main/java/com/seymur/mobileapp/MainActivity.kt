@@ -1,66 +1,34 @@
 package com.seymur.mobileapp
 
-import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
-import android.widget.Toast
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.seymur.mobileapp.databinding.ActivityMainBinding
-import java.io.File
+import androidx.fragment.app.Fragment
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
-    private lateinit var preferences: SharedPreferences
-    private var fromRegisterPage: Boolean = false
+
+    private var isFragmentA = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_main)
 
-        preferences = getSharedPreferences("information", MODE_PRIVATE)
-        fromRegisterPage = preferences.getBoolean("fromRegisterPage", false)
+        // İlk olarak FragmentA'yı yerleştiriyoruz.
+        replaceFragment(FragmentA())
 
-
-        binding.LoginButton.setOnClickListener {
-            val loginMail = binding.loginMail.text.toString()
-            val loginPassword = binding.loginPassword.text.toString()
-
-
-            val file = File(filesDir, "x.txt")
-            val userExists = file.exists() && file.readLines().any { line ->
-                val (email, password) = line.split(":")
-                email == loginMail && password == loginPassword
-            }
-
-            if (userExists) {
-                val intent = Intent(this, LoginPage::class.java)
-                startActivity(intent)
-                finish()
+        findViewById<Button>(R.id.switchFragmentButton).setOnClickListener {
+            if (isFragmentA) {
+                replaceFragment(FragmentB())
             } else {
-                Toast.makeText(this, "The information that you entered is incorrect", Toast.LENGTH_LONG).show()
+                replaceFragment(FragmentA())
             }
-        }
-
-
-        binding.RegisterButton.setOnClickListener {
-            preferences.edit().putBoolean("fromRegisterPage", true).apply()
-            val intent = Intent(this, RegisterPage::class.java)
-            startActivity(intent)
+            isFragmentA = !isFragmentA
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        fromRegisterPage = preferences.getBoolean("fromRegisterPage", false)
-    }
-
-    override fun onBackPressed() {
-        if (fromRegisterPage) {
-            preferences.edit().putBoolean("fromRegisterPage", false).apply()
-            super.onBackPressed()
-        } else {
-            finish()
-        }
+    private fun replaceFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .commit()
     }
 }
